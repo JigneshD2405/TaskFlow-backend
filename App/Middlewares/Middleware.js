@@ -1,6 +1,6 @@
 "use strict";
 import Node from "#Node";
-import path from "path";
+import { verifyAccessToken } from "#App/Utils/Index.js"
 
 const middleware = {
   authMiddleware: async function (req, res, next) {
@@ -14,10 +14,6 @@ const middleware = {
 
       const authHeader = req.headers.authorization;
       if (!authHeader) {
-        const folder = req.path.split("/")[1];
-        if (["Assets", "Documents"].includes(folder)) {
-          return res.status(403).sendFile(path.resolve("View/index.html"));
-        }
         return res.status(401).json({ status: 401, message: "Unauthorized user" });
       }
 
@@ -26,17 +22,22 @@ const middleware = {
         return res.status(401).json({ status: 401, message: "Unauthorized user" });
       }
 
-      const payload = Node.App.Utils.Index.verifyToken(token);
+      const payload = verifyAccessToken(token);
       if (!payload || payload.status === 400 || !payload.data?._id) {
         return res.status(401).json({ status: 401, message: "Unauthorized user" });
       }
 
+      const login_user = await User.findOne({
+        _id: new Node.Mongoose.Types.ObjectId(payload.data._id),
+        deleted: false,
+      });
 
-
-      if (!Array.isArray(login_user?.tokens) || !login_user.tokens.some((stored) => stored.trim() === token.trim())) {
+      if (!login_user) {
         return res.status(401).json({ status: 401, message: "Unauthorized user" });
       }
 
+      req.login_user = login_user;
+      req.token = token;
       next();
     } catch (error) {
       return res.status(500).json({ status: 500, message: "Internal Server Error" });

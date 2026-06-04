@@ -6,7 +6,6 @@ import Node from "#Node";
 import bcrypt from "bcrypt";
 import bodyParser from "body-parser";
 import cors from "cors";
-import crypto from "crypto";
 import "dotenv/config";
 import express from "express";
 import fs from "fs";
@@ -30,9 +29,7 @@ Node.Joi = Joi;
 Node.Winston = winston;
 Node.Bcrypt = bcrypt;
 Node.Jwt = jwt;
-Node.Crypto = crypto;
 Node.Moment = moment;
-
 
 Node.Express = express();
 Node.Router = express.Router();
@@ -43,7 +40,6 @@ Node.Express.use(morgan("dev"));
 Node.Express.use(bodyParser.json({ limit: "50mb" }));
 Node.Express.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-// Headers
 Node.Express.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, PATCH, OPTIONS");
