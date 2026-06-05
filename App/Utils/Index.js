@@ -48,3 +48,11 @@ export async function hashPassword(password) {
 export async function verifyPassword(password, hashedPassword) {
   return await Node.Bcrypt.compare(password, hashedPassword);
 }
+
+export const withSocketEmit = (req) => {
+  req.emitToBoard = (boardId, event, data) => {
+    if (Node.Socket) {
+      Node.Socket.to(`board:${boardId}`).emit(event, data);
+    }
+  };
+};

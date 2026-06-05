@@ -33,6 +33,10 @@ export const create = async (req) => {
   value.updatedBy = req.login_user._id;
   const column = await Column.create(value);
 
+  if (req.emitToBoard) {
+    req.emitToBoard(boardId.toString(), "column:created", { column });
+  }
+
   return column;
 };
 
@@ -49,6 +53,10 @@ export const update = async (req) => {
   if (error) throw new HTTP_ERRORS.CustomError(error.details[0].message);
 
   const updated = await Column.findOneAndUpdate({ _id: id }, { $set: value }, { new: true });
+
+  if (req.emitToBoard) {
+    req.emitToBoard(column.boardId.toString(), "column:updated", { column: updated });
+  }
 
   return updated;
 };
@@ -68,5 +76,8 @@ export const remove = async (req) => {
     { new: true },
   );
 
+  if (req.emitToBoard) {
+    req.emitToBoard(column.boardId.toString(), "column:deleted", { columnId: id });
+  }
   return updated;
 };

@@ -41,6 +41,9 @@ export const create = async (req) => {
   value.updatedBy = req.login_user._id;
   const card = await Card.create(value);
 
+  if (req.emitToBoard) {
+    req.emitToBoard(board._id.toString(), "card:created", { card });
+  }
   return card;
 };
 
@@ -58,6 +61,9 @@ export const update = async (req) => {
 
   const updated = await Card.findOneAndUpdate({ _id: id }, { $set: value }, { new: true });
 
+  if (req.emitToBoard) {
+    req.emitToBoard(card.boardId.toString(), "card:updated", { card: updated });
+  }
   return updated;
 };
 export const remove = async (req) => {
@@ -70,6 +76,10 @@ export const remove = async (req) => {
   await verifyColumnAccess(card.columnId, userId);
 
   const updated = await Card.findOneAndUpdate({ _id: id }, { deleted: true, deletedAt: new Date() }, { new: true });
+
+  if (req.emitToBoard) {
+    req.emitToBoard(card.boardId.toString(), "card:deleted", { cardId: id, columnId: card.columnId });
+  }
 
   return updated;
 };
@@ -107,6 +117,14 @@ export const move = async (req) => {
     { $set: { columnId: value.targetColumnId, order: value.order } },
     { new: true },
   );
+
+  if (req.emitToBoard) {
+    req.emitToBoard(card.boardId.toString(), "card:moved", {
+      card: updated,
+      fromColumnId: card.columnId,
+      toColumnId: value.targetColumnId,
+    });
+  }
 
   return updated;
 };
