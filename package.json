@@ -34,6 +34,12 @@
     "#HttpResponse/*": "./App/HttpResponse/*",
     "#App/*": "./App/*",
     "#Index": "./App/Utils/Index.js",
-    "#Permission": "./App/Middlewares/PermissionMiddleware.js"
+    "#Permission": "./App/Middlewares/PermissionMiddleware.js",
+    "#Models/*": "./App/Modules/Models/*",
+    "#Validators/*": "./App/Modules/Validators/*",
+    "#Controllers/*": "./App/Modules/Controllers/*",
+    "#Services/*": "./App/Modules/Services/*",
+    "#Routes/*": "./App/Modules/Routes/*",
+    "#Models": "./App/Modules/Models/"
   }
 }

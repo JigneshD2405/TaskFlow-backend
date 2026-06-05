@@ -1,6 +1,7 @@
 "use strict";
 import Node from "#Node";
 import { verifyAccessToken } from "#App/Utils/Index.js"
+import User from "#Models/User.model.js"
 
 const middleware = {
   authMiddleware: async function (req, res, next) {
@@ -19,11 +20,13 @@ const middleware = {
 
       const [type, token] = authHeader.split(" ");
       if (type !== "Bearer" || !token) {
+
         return res.status(401).json({ status: 401, message: "Unauthorized user" });
       }
 
       const payload = verifyAccessToken(token);
       if (!payload || payload.status === 400 || !payload.data?._id) {
+
         return res.status(401).json({ status: 401, message: "Unauthorized user" });
       }
 

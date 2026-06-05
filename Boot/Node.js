@@ -9,15 +9,26 @@ function Node() {
   this.Mongoose = {};
   this.AggregatePagination = {};
   this.Fs = {};
+  this.Os = {};
   this.Https = {};
   this.HttpServer = {};
   this.Winston = {};
   this.Bcrypt = {};
+  this.UploadPath = {};
   this.Express = {};
+  this.ExpressValidator = {};
   this.Router = {};
+  this.Path = {};
+  this.Crypto = {};
   this.Socket = {};
+
   this.Moment = {};
   this.Jwt = {};
+  this.UUID = {};
+  this.NodeMailer = {};
+
+  this.Memory = {};
+  this.TimezoneOffset = {};
   this.ip = {};
   this.logger = {};
 
@@ -27,10 +38,14 @@ function Node() {
 
   this.Joi = {};
 
-  this.UNPROTECTED_APIS = [
-    "/sign-in",
-  ];
 
+  this.UNPROTECTED_APIS = ["/register", "/sign-in", "/refresh-token"];
+
+  this.FEATURE_LIMIT_API = [];
+
+  this.ROUTES = {};
+  this.PATIENT_TITLES = ["Mr", "Ms", "Mrs", "Miss", "Master", "Mx"];
+  this.GENDER = ["Male", "Female", "Other"];
 }
 
 export default new Node();
