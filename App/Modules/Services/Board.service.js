@@ -93,7 +93,7 @@ export const remove = async (req) => {
 
   return await Board.findOneAndUpdate(
     { _id: id },
-    { deleted: true, deletedAt: new Date(), deletedBy: userId },
+    { deleted: true, deletedAt: new Date(), deletedBy: req.login_user._id },
     { new: true },
   );
 };

@@ -3,10 +3,8 @@ import Board from "#Models/Board.model.js";
 import Card from "#Models/Card.model.js";
 import Column from "#Models/Column.model.js";
 import { cardMoveSchema, cardSchema, cardUpdateSchema } from "#Validators/Card.validation.js";
-import mongoose from "mongoose";
 
 const keyword = "Card";
-
 
 const verifyColumnAccess = async (columnId, userId) => {
   const column = await Column.findOne({ _id: columnId, deleted: false });
@@ -21,7 +19,6 @@ const verifyColumnAccess = async (columnId, userId) => {
 
   return { column, board };
 };
-
 
 export const create = async (req) => {
   const columnId = req.params.id;
@@ -40,13 +37,12 @@ export const create = async (req) => {
   value.columnId = columnId;
   value.boardId = column.boardId;
 
+  value.createdBy = req.login_user._id;
+  value.updatedBy = req.login_user._id;
   const card = await Card.create(value);
-
-
 
   return card;
 };
-
 
 export const update = async (req) => {
   const id = req.params.id;
@@ -62,7 +58,6 @@ export const update = async (req) => {
 
   const updated = await Card.findOneAndUpdate({ _id: id }, { $set: value }, { new: true });
 
-
   return updated;
 };
 export const remove = async (req) => {
@@ -74,17 +69,10 @@ export const remove = async (req) => {
 
   await verifyColumnAccess(card.columnId, userId);
 
-  const updated = await Card.findOneAndUpdate(
-    { _id: id },
-    { deleted: true, deletedAt: new Date() },
-    { new: true }
-  );
-
-
+  const updated = await Card.findOneAndUpdate({ _id: id }, { deleted: true, deletedAt: new Date() }, { new: true });
 
   return updated;
 };
-
 
 export const move = async (req) => {
   const id = req.params.id;
@@ -104,37 +92,21 @@ export const move = async (req) => {
   if (targetColumn.boardId.toString() !== card.boardId.toString()) {
     throw new HTTP_ERRORS.ForbiddenError("Column belongs to a different board");
   }
+  await Card.updateMany(
+    {
+      columnId: value.targetColumnId,
+      order: { $gte: value.order },
+      deleted: false,
+      _id: { $ne: id },
+    },
+    { $inc: { order: 1 } },
+  );
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const updated = await Card.findOneAndUpdate(
+    { _id: id },
+    { $set: { columnId: value.targetColumnId, order: value.order } },
+    { new: true },
+  );
 
-  try {
-
-    await Card.updateMany(
-      {
-        columnId: value.targetColumnId,
-        order: { $gte: value.order },
-        deleted: false,
-        _id: { $ne: id },
-      },
-      { $inc: { order: 1 } },
-      { session }
-    );
-
-
-    const updated = await Card.findOneAndUpdate(
-      { _id: id },
-      { $set: { columnId: value.targetColumnId, order: value.order } },
-      { new: true, session }
-    );
-
-    await session.commitTransaction();
-
-    return updated;
-  } catch (err) {
-    await session.abortTransaction();
-    throw err;
-  } finally {
-    session.endSession();
-  }
+  return updated;
 };

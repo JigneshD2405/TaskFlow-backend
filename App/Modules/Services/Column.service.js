@@ -14,7 +14,6 @@ const verifyBoardAccess = async (boardId, userId) => {
   return board;
 };
 
-
 export const create = async (req) => {
   const boardId = req.params.id;
   const userId = req.login_user._id;
@@ -30,11 +29,12 @@ export const create = async (req) => {
   }
 
   value.boardId = boardId;
+  value.createdBy = req.login_user._id;
+  value.updatedBy = req.login_user._id;
   const column = await Column.create(value);
 
   return column;
 };
-
 
 export const update = async (req) => {
   const id = req.params.id;
@@ -53,7 +53,6 @@ export const update = async (req) => {
   return updated;
 };
 
-
 export const remove = async (req) => {
   const id = req.params.id;
   const userId = req.login_user._id;
@@ -65,8 +64,8 @@ export const remove = async (req) => {
 
   const updated = await Column.findOneAndUpdate(
     { _id: id },
-    { deleted: true, deletedAt: new Date() },
-    { new: true }
+    { deleted: true, deletedAt: new Date(), deletedBy: req.login_user._id },
+    { new: true },
   );
 
   return updated;
