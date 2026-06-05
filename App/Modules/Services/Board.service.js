@@ -1,5 +1,4 @@
 import { HTTP_ERRORS } from "#App/HttpResponse/Index.js";
-import Node from "#Node"
 import Board from "#Models/Board.model.js";
 import { boardSchema, boardUpdateSchema } from "#Validators/Board.validation.js";
 
@@ -8,11 +7,10 @@ const keyword = "Board";
 export const getById = async (req) => {
   const id = req.params.id;
 
-  const board = await Board.findOne({ _id: id, deleted: false })
+  const board = await Board.findOne({ _id: id, deleted: false });
   if (!board) throw new HTTP_ERRORS.NotFoundError(keyword);
   return board;
 };
-
 
 export const create = async (req) => {
   const { error, value } = boardSchema.validate(req.body || {});
@@ -25,19 +23,14 @@ export const create = async (req) => {
   if (!value.members.map(String).includes(ownerStr)) {
     value.members.push(req.login_user._id);
   }
-
+  value.createdBy = req.login_user._id;
+  value.updatedBy = req.login_user._id;
   return await Board.create(value);
 };
 
 export const list = async (req) => {
   const userId = req.login_user._id;
-  const {
-    page = 1,
-    limit = 20,
-    search,
-    sort = "createdAt",
-    sortType = -1,
-  } = req.query;
+  const { page = 1, limit = 20, search, sort = "createdAt", sortType = -1 } = req.query;
 
   const matchStage = {
     deleted: false,
@@ -78,7 +71,6 @@ export const list = async (req) => {
   });
 };
 
-
 export const update = async (req) => {
   const id = req.params.id;
   const userId = req.login_user._id;
@@ -88,21 +80,22 @@ export const update = async (req) => {
 
   const board = await Board.findOne({ _id: id, ownerId: userId, deleted: false });
   if (!board) throw new HTTP_ERRORS.NotFoundError(keyword);
+  console.log("valueee :- ", value);
+  console.log("_id :- ", id);
 
   return await Board.findOneAndUpdate({ _id: id }, { $set: value }, { new: true });
 };
-
 
 export const remove = async (req) => {
   const id = req.params.id;
   const userId = req.login_user._id;
 
-  const board = await Board.findOne({ _id: id, ownerId: userId, deleted: false, });
+  const board = await Board.findOne({ _id: id, ownerId: userId, deleted: false });
   if (!board) throw new HTTP_ERRORS.NotFoundError(keyword);
 
   return await Board.findOneAndUpdate(
     { _id: id },
     { deleted: true, deletedAt: new Date(), deletedBy: userId },
-    { new: true }
+    { new: true },
   );
 };

@@ -13,4 +13,4 @@ export const boardUpdateSchema = Node.Joi.object({
   title: Node.Joi.string().trim().min(1).max(200).optional(),
   description: Node.Joi.string().trim().max(1000).allow("").optional(),
   members: Node.Joi.array().items(Node.Joi.string()).optional(),
-});
+}).unknown(true);
