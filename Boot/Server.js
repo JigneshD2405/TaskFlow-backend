@@ -10,6 +10,7 @@ import cors from "cors";
 import crypto from "crypto";
 import "dotenv/config";
 import express from "express";
+import cookieParser from "cookie-parser";
 import fs from "fs";
 import https from "https";
 import ip from "ip";
@@ -56,6 +57,7 @@ Node.Express.use(cors({
   credentials: true
 }));
 Node.Express.use(morgan("dev"));
+Node.Express.use(cookieParser());
 Node.Express.use(bodyParser.json({ limit: "50mb" }));
 Node.Express.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 

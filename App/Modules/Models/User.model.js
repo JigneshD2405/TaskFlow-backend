@@ -1,6 +1,5 @@
 "use strict";
 import Node from "#Node";
-import CommonSchema from "#App/Common/CommonModel.js";
 const Schema = Node.Mongoose.Schema;
 
 const schemaObj = {
