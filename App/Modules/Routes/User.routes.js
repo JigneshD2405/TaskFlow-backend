@@ -18,6 +18,7 @@ try {
   Node.Router.post("/refresh-token", middleware, Controller.refreshToken);
   Node.Router.post("/sign-out", middleware, Controller.logout);
   Node.Router.get("/auth", middleware, Controller.auth);
+  Node.Router.get("/users/search", middleware, Controller.search);
 } catch (error) {
   console.error("Error in Auth Routes:", error);
 }

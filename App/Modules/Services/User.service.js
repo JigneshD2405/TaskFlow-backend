@@ -33,8 +33,8 @@ export const login = async (req, res) => {
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
 
-  user.refreshTokens = [...(user.refreshTokens || []), refreshToken];
-  await user.save();
+  // Atomically add refresh token to avoid version conflicts
+  await User.updateOne({ _id: user._id }, { $push: { refreshTokens: refreshToken } });
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
@@ -69,9 +69,8 @@ export const refreshToken = async (req, res) => {
   const newAccessToken = generateAccessToken(tokenPayload);
   const newRefreshToken = generateRefreshToken(tokenPayload);
 
-  user.refreshTokens = user.refreshTokens.filter((t) => t !== token);
-  user.refreshTokens.push(newRefreshToken);
-  await user.save();
+  // Atomically replace refresh token array to avoid version conflicts
+  await User.updateOne({ _id: user._id }, { $set: { refreshTokens: [...user.refreshTokens.filter((t) => t !== token), newRefreshToken] } });
 
   res.cookie("refreshToken", newRefreshToken, {
     httpOnly: true,
@@ -81,6 +80,24 @@ export const refreshToken = async (req, res) => {
   });
 
   return { accessToken: newAccessToken };
+};
+
+export const search = async (req) => {
+  const { q = "" } = req.query;
+  const currentUserId = req.login_user._id;
+
+  const filter = { deleted: false, _id: { $ne: currentUserId } };
+
+  if (q.trim()) {
+    filter.$or = [
+      { name: { $regex: q.trim(), $options: "i" } },
+      { email: { $regex: q.trim(), $options: "i" } },
+    ];
+  }
+
+  const users = await User.find(filter, { name: 1, email: 1 }).limit(50);
+
+  return users;
 };
 
 export const logout = async (req, res) => {

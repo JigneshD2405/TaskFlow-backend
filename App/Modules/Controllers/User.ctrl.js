@@ -1,7 +1,7 @@
 "use strict";
 import { HTTP_STATUS_CODE } from "#App/HttpResponse/Index.js";
 import { HttpResponse, errorResponse } from "#App/HttpResponse/Response.js";
-import { login, logout, refreshToken, register } from "#Services/User.service.js";
+import { login, logout, refreshToken, register, search } from "#Services/User.service.js";
 const keyword = "User"
 export default {
   register: async (req, res) => {
@@ -45,6 +45,15 @@ export default {
       const user = req.login_user;
       const payload = { _id: user._id, name: user.name, email: user.email };
       return new HttpResponse(res, [HTTP_STATUS_CODE.GETTED, payload], keyword);
+    } catch (error) {
+      return new HttpResponse(res, errorResponse(error));
+    }
+  },
+
+  search: async (req, res) => {
+    try {
+      const payload = await search(req);
+      return new HttpResponse(res, [HTTP_STATUS_CODE.LIST, payload], keyword);
     } catch (error) {
       return new HttpResponse(res, errorResponse(error));
     }

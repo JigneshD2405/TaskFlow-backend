@@ -1,6 +1,6 @@
 "use strict";
 import Node from "#Node";
-import { verifyAccessToken } from "#App/Utils/Index.js"
+import { verifyAccessToken, withSocketEmit } from "#App/Utils/Index.js"
 import User from "#Models/User.model.js"
 
 const middleware = {
@@ -41,6 +41,7 @@ const middleware = {
 
       req.login_user = login_user;
       req.token = token;
+      withSocketEmit(req);
       next();
     } catch (error) {
       return res.status(500).json({ status: 500, message: "Internal Server Error" });

@@ -91,6 +91,9 @@ Node.initialize = async (port) => {
     // Initialize HTTP
     await (await import("#Library/http.js")).load();
 
+    // Initialize Socket.io (must be after HttpServer is created)
+    await (await import("#Library/socket.js")).load();
+
     await Node.HttpServer.listen(process.env.PORT);
 
     // Initialize Logger

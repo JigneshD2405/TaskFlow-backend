@@ -1,4 +1,5 @@
 import { HTTP_ERRORS } from "#App/HttpResponse/Index.js";
+import { withTransaction } from "#App/Utils/Index.js";
 import Board from "#Models/Board.model.js";
 import Card from "#Models/Card.model.js";
 import Column from "#Models/Column.model.js";
@@ -94,7 +95,7 @@ export const move = async (req) => {
   const card = await Card.findOne({ _id: id, deleted: false });
   if (!card) throw new HTTP_ERRORS.NotFoundError(keyword);
 
-  await verifyColumnAccess(card.columnId, userId);
+  const { board } = await verifyColumnAccess(card.columnId, userId);
 
   const targetColumn = await Column.findOne({ _id: value.targetColumnId, deleted: false });
   if (!targetColumn) throw new HTTP_ERRORS.NotFoundError("Target Column");
@@ -102,24 +103,28 @@ export const move = async (req) => {
   if (targetColumn.boardId.toString() !== card.boardId.toString()) {
     throw new HTTP_ERRORS.ForbiddenError("Column belongs to a different board");
   }
-  await Card.updateMany(
-    {
-      columnId: value.targetColumnId,
-      order: { $gte: value.order },
-      deleted: false,
-      _id: { $ne: id },
-    },
-    { $inc: { order: 1 } },
-  );
 
-  const updated = await Card.findOneAndUpdate(
-    { _id: id },
-    { $set: { columnId: value.targetColumnId, order: value.order } },
-    { new: true },
-  );
+  const updated = await withTransaction(async (session) => {
+    await Card.updateMany(
+      {
+        columnId: value.targetColumnId,
+        order: { $gte: value.order },
+        deleted: false,
+        _id: { $ne: id },
+      },
+      { $inc: { order: 1 } },
+      { session },
+    );
+
+    return await Card.findOneAndUpdate(
+      { _id: id },
+      { $set: { columnId: value.targetColumnId, order: value.order } },
+      { new: true, session },
+    );
+  });
 
   if (req.emitToBoard) {
-    req.emitToBoard(card.boardId.toString(), "card:moved", {
+    req.emitToBoard(board._id.toString(), "card:moved", {
       card: updated,
       fromColumnId: card.columnId,
       toColumnId: value.targetColumnId,

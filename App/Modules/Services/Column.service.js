@@ -1,5 +1,7 @@
 import { HTTP_ERRORS } from "#App/HttpResponse/Index.js";
+import { withTransaction } from "#App/Utils/Index.js";
 import Board from "#Models/Board.model.js";
+import Card from "#Models/Card.model.js";
 import Column from "#Models/Column.model.js";
 import { columnSchema, columnUpdateSchema } from "#Validators/Column.validation.js";
 const keyword = "Column";
@@ -70,11 +72,21 @@ export const remove = async (req) => {
 
   await verifyBoardAccess(column.boardId, userId);
 
-  const updated = await Column.findOneAndUpdate(
-    { _id: id },
-    { deleted: true, deletedAt: new Date(), deletedBy: req.login_user._id },
-    { new: true },
-  );
+  const now = new Date();
+
+  const updated = await withTransaction(async (session) => {
+    await Card.updateMany(
+      { columnId: id, deleted: false },
+      { deleted: true, deletedAt: now, deletedBy: req.login_user._id },
+      { session },
+    );
+
+    return await Column.findOneAndUpdate(
+      { _id: id },
+      { deleted: true, deletedAt: now, deletedBy: req.login_user._id },
+      { new: true, session },
+    );
+  });
 
   if (req.emitToBoard) {
     req.emitToBoard(column.boardId.toString(), "column:deleted", { columnId: id });

@@ -49,10 +49,28 @@ export async function verifyPassword(password, hashedPassword) {
   return await Node.Bcrypt.compare(password, hashedPassword);
 }
 
+export async function withTransaction(fn) {
+  const session = await Node.Mongoose.startSession();
+  session.startTransaction();
+  try {
+    const result = await fn(session);
+    await session.commitTransaction();
+    return result;
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
+}
+
 export const withSocketEmit = (req) => {
+  const senderSocketId = req.headers["x-socket-id"] || null;
+
   req.emitToBoard = (boardId, event, data) => {
-    if (Node.Socket) {
-      Node.Socket.to(`board:${boardId}`).emit(event, data);
-    }
+    if (!Node.Socket?.to) return;
+    const channel = Node.Socket.to(`board:${boardId}`);
+    const emitter = senderSocketId ? channel.except(senderSocketId) : channel;
+    emitter.emit(event, data);
   };
 };
