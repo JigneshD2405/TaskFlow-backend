@@ -51,18 +51,13 @@ Node.Express = express();
 Node.Router = express.Router();
 
 // Middleware
-Node.Express.use(cors());
+Node.Express.use(cors({
+  origin: true,
+  credentials: true
+}));
 Node.Express.use(morgan("dev"));
 Node.Express.use(bodyParser.json({ limit: "50mb" }));
 Node.Express.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
-
-// Headers
-Node.Express.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, PATCH, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  next();
-});
 
 /* ------------------------------
  * Node Initialization
