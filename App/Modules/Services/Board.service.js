@@ -80,8 +80,6 @@ export const update = async (req) => {
 
   const board = await Board.findOne({ _id: id, ownerId: userId, deleted: false });
   if (!board) throw new HTTP_ERRORS.NotFoundError(keyword);
-  console.log("valueee :- ", value);
-  console.log("_id :- ", id);
 
   return await Board.findOneAndUpdate({ _id: id }, { $set: value }, { new: true });
 };
