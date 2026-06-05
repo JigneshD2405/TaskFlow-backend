@@ -149,7 +149,7 @@ export const remove = async (req) => {
 
   const now = new Date();
 
-  return await withTransaction(async (session) => {
+  const deleted = await withTransaction(async (session) => {
     await Card.updateMany(
       { boardId: id, deleted: false },
       { deleted: true, deletedAt: now, deletedBy: req.login_user._id },
@@ -168,4 +168,10 @@ export const remove = async (req) => {
       { new: true, session },
     );
   });
+
+  if (req.emitToBoard) {
+    req.emitToBoard(id.toString(), "board:deleted", { boardId: id });
+  }
+
+  return deleted;
 };

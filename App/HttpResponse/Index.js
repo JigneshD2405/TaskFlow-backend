@@ -92,6 +92,15 @@ const HTTP_ERRORS = {
             });
         }
     },
+    ForbiddenError: class extends HttpError {
+        constructor(message) {
+            super({
+                message: (message ? message + ' ' : '') + 'Access Forbidden',
+                HTTP_ERROR_CODE: HTTP_STATUS_CODE.FORBIDDEN,
+                name: 'ForbiddenError',
+            });
+        }
+    },
     CustomError: class extends HttpError {
         constructor(message) {
             super({ message: message || '', HTTP_ERROR_CODE: HTTP_STATUS_CODE.BAD_REQUEST, name: 'CustomError' });

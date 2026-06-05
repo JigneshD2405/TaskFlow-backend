@@ -1,11 +1,10 @@
 import { HTTP_ERRORS } from "#App/HttpResponse/Index.js";
-import User from "#Models/User.model.js";
-import { generateAccessToken, generateRefreshToken, hashPassword, verifyPassword, verifyRefreshToken } from "#Index";
 import { loginSchema, registerSchema } from "#App/Modules/Validators/User.validation.js";
-import Node from "#Node"
+import { generateAccessToken, generateRefreshToken, hashPassword, verifyPassword, verifyRefreshToken } from "#Index";
+import User from "#Models/User.model.js";
+import Node from "#Node";
 
 export const register = async (req) => {
-
   const { error, value } = registerSchema.validate(req.body || {});
   if (error) throw new HTTP_ERRORS.CustomError(error.details[0].message);
 
@@ -13,8 +12,8 @@ export const register = async (req) => {
   if (existing) throw new HTTP_ERRORS.AlreadyExistError("Email");
 
   value.password = await hashPassword(value.password);
-  value.updatedBy = req?.login_user?._id || new Node.Mongoose.ObjectId()
-  value.createdBy = req?.login_user?._id || new Node.Mongoose.ObjectId()
+  value.updatedBy = req?.login_user?._id || new Node.Mongoose.ObjectId();
+  value.createdBy = req?.login_user?._id || new Node.Mongoose.ObjectId();
   const user = await User.create(value);
   return { _id: user._id, name: user.name, email: user.email };
 };
@@ -33,7 +32,6 @@ export const login = async (req, res) => {
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
 
-  // Atomically add refresh token to avoid version conflicts
   await User.updateOne({ _id: user._id }, { $push: { refreshTokens: refreshToken } });
 
   res.cookie("refreshToken", refreshToken, {
@@ -69,8 +67,10 @@ export const refreshToken = async (req, res) => {
   const newAccessToken = generateAccessToken(tokenPayload);
   const newRefreshToken = generateRefreshToken(tokenPayload);
 
-  // Atomically replace refresh token array to avoid version conflicts
-  await User.updateOne({ _id: user._id }, { $set: { refreshTokens: [...user.refreshTokens.filter((t) => t !== token), newRefreshToken] } });
+  await User.updateOne(
+    { _id: user._id },
+    { $set: { refreshTokens: [...user.refreshTokens.filter((t) => t !== token), newRefreshToken] } },
+  );
 
   res.cookie("refreshToken", newRefreshToken, {
     httpOnly: true,
@@ -89,10 +89,7 @@ export const search = async (req) => {
   const filter = { deleted: false, _id: { $ne: currentUserId } };
 
   if (q.trim()) {
-    filter.$or = [
-      { name: { $regex: q.trim(), $options: "i" } },
-      { email: { $regex: q.trim(), $options: "i" } },
-    ];
+    filter.$or = [{ name: { $regex: q.trim(), $options: "i" } }, { email: { $regex: q.trim(), $options: "i" } }];
   }
 
   const users = await User.find(filter, { name: 1, email: 1 }).limit(50);

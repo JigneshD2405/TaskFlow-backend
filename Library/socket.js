@@ -12,6 +12,7 @@ export const load = () => {
         methods: ["GET", "POST"],
         credentials: true,
       },
+      transports: ["websocket", "polling"],
       pingTimeout: 60000,
       pingInterval: 25000,
       connectTimeout: 10000,
@@ -60,6 +61,14 @@ export const load = () => {
 
       socket.on("disconnect", () => {
         console.info(`Client disconnected: ${socket.id}`);
+        socket.rooms.forEach((room) => {
+          if (room.startsWith("board:")) {
+            socket.to(room).emit("user:left", {
+              userId: socket.login_user._id,
+              boardId: room.replace("board:", ""),
+            });
+          }
+        });
       });
 
       socket.on("error", (err) => {
